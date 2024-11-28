@@ -89,8 +89,8 @@ namespace BetterSongList.HarmonyPatches.UI {
 
 			buttons = new[] {
 				btnUpFast,
-				BuildButton(buton, "#HeightIcon", 0.10f, 0, () => Scroll(1, 0)),
-				BuildButton(buton, "#HeightIcon", 0.76f, 180, () => Scroll(1, 1)),
+				BuildButton(buton, "#HeightIcon", 0.30f, 0, () => Scroll(1, 0)),
+				BuildButton(buton, "#HeightIcon", 0.56f, 180, () => Scroll(1, 1)),
 				btnDownFast
 			}.Select(x => x.gameObject).ToArray();
 

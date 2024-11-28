@@ -2,7 +2,7 @@
     "id": "BetterSongList",
     "name": "BetterSongList",
     "author": "Kinsi55, revisions TheBlackParrot",
-    "version": "0.4.1+r1",
+    "version": "0.4.1+r2",
     "description": "Adds Various improvements to the Basegame Map list like Filters, a persisted state and much more",
     "gameVersion": "1.39.1",
     "dependsOn": {

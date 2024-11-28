@@ -1,6 +1,7 @@
 # Better Song List
 *This is a modified version of the upstream version of Better Song List, please see [Kinsi's repo](https://github.com/kinsi55/BeatSaber_BetterSongList) for the official version. Modifications include:*
 - Minor UI formatting fanciness (oo la la)
+- Further spacing of scroll-to-top/bottom buttons to avoid accidental presses (guh)
 - Display of the map's jump distance in reaction time (milliseconds), instead of raw JD
   - (kudos to iPixelGalaxy! I used their RT formula in their version)
 - Absolute map age, instead of relative map age
@@ -18,4 +19,4 @@
 
 ---
 
-![Beat Saber screenshot](Screenshots/20241127_110608.png)
+![Beat Saber screenshot](Screenshots/20241128_012833.png)

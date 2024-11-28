@@ -5,6 +5,7 @@ using System;
 using System.Collections;
 using System.Linq;
 using System.Reflection;
+using System.Threading.Tasks;
 using UnityEngine;
 using UnityEngine.Events;
 
@@ -37,8 +38,11 @@ namespace BetterSongList.HarmonyPatches.UI {
 			r.anchorMax = new Vector2(1, 0.953f - vOffs);
 
 			var i = newBtn.GetComponentInChildren<ImageView>();
-			if(Icon?[0] == '#')
-				i.SetImageAsync(Icon).RunSynchronously(); // this throws an exception if it's already completed but i can't get it to shut up so whatever
+			if(Icon?[0] == '#') {
+				IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(async () => {
+					await i.SetImageAsync(Icon);
+				});
+			}
 
 			// Put the Icon in the middle of the touchable rect
 			r = (RectTransform)i.transform;
@@ -89,16 +93,19 @@ namespace BetterSongList.HarmonyPatches.UI {
 
 			buttons = new[] {
 				btnUpFast,
-				BuildButton(buton, "#HeightIcon", 0.10f, 0, () => Scroll(1, 0)),
-				BuildButton(buton, "#HeightIcon", 0.76f, 180, () => Scroll(1, 1)),
+				BuildButton(buton, "#HeightIcon", 0.30f, 0, () => Scroll(1, 0)),
+				BuildButton(buton, "#HeightIcon", 0.56f, 180, () => Scroll(1, 1)),
 				btnDownFast
 			}.Select(x => x.gameObject).ToArray();
-
-			//var sp =  Utilities.LoadSpriteRaw(Utilities.GetResource(Assembly.GetExecutingAssembly(), "BetterSongList.UI.DoubleArrowIcon.png"));
-			var sp = Utilities.LoadSpriteAsync(Utilities.GetResource(Assembly.GetExecutingAssembly(), "BetterSongList.UI.DoubleArrowIcon.png")).Result;
-
-			btnUpFast.GetComponentInChildren<ImageView>().sprite = sp;
-			btnDownFast.GetComponentInChildren<ImageView>().sprite = sp;
+			
+			// i spent hours figuring this out fml
+			IPA.Utilities.Async.UnityMainThreadTaskScheduler.Factory.StartNew(async () => {
+				var sp = await Utilities.LoadSpriteAsync(Utilities.GetResource(Assembly.GetExecutingAssembly(),
+					"BetterSongList.UI.DoubleArrowIcon.png"));
+				
+				btnUpFast.GetComponentInChildren<ImageView>().sprite = sp;
+				btnDownFast.GetComponentInChildren<ImageView>().sprite = sp;
+			});
 		}
 	}
 }

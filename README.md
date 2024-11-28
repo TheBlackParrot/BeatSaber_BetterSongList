@@ -18,4 +18,4 @@
 
 ---
 
-![Beat Saber screenshot](Screenshots\20241127_110608.png)
+![Beat Saber screenshot](Screenshots/20241127_110608.png)

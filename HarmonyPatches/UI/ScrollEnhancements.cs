@@ -38,7 +38,7 @@ namespace BetterSongList.HarmonyPatches.UI {
 
 			var i = newBtn.GetComponentInChildren<ImageView>();
 			if(Icon?[0] == '#')
-				i.SetImage(Icon);
+				i.SetImageAsync(Icon).RunSynchronously(); // this throws an exception if it's already completed but i can't get it to shut up so whatever
 
 			// Put the Icon in the middle of the touchable rect
 			r = (RectTransform)i.transform;
@@ -94,7 +94,8 @@ namespace BetterSongList.HarmonyPatches.UI {
 				btnDownFast
 			}.Select(x => x.gameObject).ToArray();
 
-			var sp =  Utilities.LoadSpriteRaw(Utilities.GetResource(Assembly.GetExecutingAssembly(), "BetterSongList.UI.DoubleArrowIcon.png"));
+			//var sp =  Utilities.LoadSpriteRaw(Utilities.GetResource(Assembly.GetExecutingAssembly(), "BetterSongList.UI.DoubleArrowIcon.png"));
+			var sp = Utilities.LoadSpriteAsync(Utilities.GetResource(Assembly.GetExecutingAssembly(), "BetterSongList.UI.DoubleArrowIcon.png")).Result;
 
 			btnUpFast.GetComponentInChildren<ImageView>().sprite = sp;
 			btnDownFast.GetComponentInChildren<ImageView>().sprite = sp;

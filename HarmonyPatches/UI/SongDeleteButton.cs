@@ -69,7 +69,7 @@ namespace BetterSongList.HarmonyPatches.UI {
 		}
 
 		[HarmonyPriority(int.MinValue)]
-		static void Postfix(StandardLevelDetailView __instance) {
+		async static void Postfix(StandardLevelDetailView __instance) {
 			if(deleteButton == null && __instance._practiceButton != null) {
 				var newButton = GameObject.Instantiate(__instance._practiceButton.gameObject, __instance._practiceButton.transform.parent);
 				deleteButton = newButton.GetComponentInChildren<Button>();
@@ -89,7 +89,7 @@ namespace BetterSongList.HarmonyPatches.UI {
 				icon.color = t.color;
 				icon._skew = 0.2f;
 				icon.material = Resources.FindObjectsOfTypeAll<Material>().FirstOrDefault(m => m.name == "UINoGlow");
-				icon.SetImage("#DeleteIcon");
+				await icon.SetImageAsync("#DeleteIcon");
 
 				GameObject.DestroyImmediate(t.gameObject);
 

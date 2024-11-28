@@ -18,18 +18,17 @@ namespace BetterSongList.HarmonyPatches.UI {
 		static TextMeshProUGUI[] fields = null;
 
 		static HoverHintController hhc = null;
-		static Sprite favIcon = null;
 		static IEnumerator ProcessFields() {
 			//Need to wait until the end of frame for reasons beyond my understanding
 			yield return new WaitForEndOfFrame();
 
-			static void ModifyValue(TextMeshProUGUI text, string hoverHint, string iconName) {
+			async static void ModifyValue(TextMeshProUGUI text, string hoverHint, string iconName) {
 				var icon = text.transform.parent.Find("Icon").GetComponent<ImageView>();
 
 				if(iconName == "Favorites") {
-					icon.sprite = (favIcon ??= Utilities.LoadSpriteRaw(Utilities.GetResource(Assembly.GetExecutingAssembly(), "BetterSongList.UI.FavoritesIcon.png")));
+					icon.sprite = await Utilities.LoadSpriteAsync(Utilities.GetResource(Assembly.GetExecutingAssembly(), "BetterSongList.UI.FavoritesIcon.png"));
 				} else {
-					icon.SetImage($"#{iconName}Icon");
+					await icon.SetImageAsync($"#{iconName}Icon");
 				}
 
 				GameObject.DestroyImmediate(text.GetComponentInParent<LocalizedHoverHint>());

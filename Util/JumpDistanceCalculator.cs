@@ -16,5 +16,9 @@ namespace BetterSongList.Util {
 		public static float GetJd(float bpm, float njs, float offset) {
 			return njs * (60f / bpm) * hjd(bpm, njs, offset) * 2;
 		}
+		// https://github.com/iPixelGalaxy/BeatSaber_BetterSongList/blob/master/Util/JumpDistanceCalculator.cs
+		public static float GetRt(float bpm, float njs, float offset) {
+			return (njs * (60f / bpm) * hjd(bpm, njs, offset) * 2) * 500 / njs;
+		}
 	}
 }

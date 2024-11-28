@@ -230,16 +230,13 @@ namespace BetterSongList.UI {
 			(target as RectTransform).sizeDelta += new Vector2(0, 2);
 			target.GetChild(0).position -= new Vector3(0, 0.02f);
 		}
-
-		bool settingsWereOpened = false;
+		
 		BSMLParserParams settingsViewParams = null;
 		void SettingsOpened() {
 			Config.Instance.SettingsSeenInVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-			settingsWereOpened = true;
 
 			BSMLStuff.InitSplitView(ref settingsViewParams, rootTransform.gameObject, SplitViews.Settings.instance).EmitEvent("ShowSettings");
 		}
-		[UIComponent("settingsButton")] readonly ClickableImage _settingsButton = null;
 
 		[UIAction("#post-parse")]
 		void Parsed() {
@@ -262,27 +259,6 @@ namespace BetterSongList.UI {
 			UpdateDropdowns();
 
 			SetSortDirection(Config.Instance.SortAsc, false);
-
-			SharedCoroutineStarter.instance.StartCoroutine(PossiblyDrawUserAttentionToSettingsButton());
-		}
-
-		IEnumerator PossiblyDrawUserAttentionToSettingsButton() {
-			try {
-				if(System.Version.TryParse(Config.Instance.SettingsSeenInVersion, out var oldV)) {
-					if(oldV >= new System.Version("0.2.6.0"))
-						yield break;
-				}
-			} catch { }
-
-			while(!settingsWereOpened) {
-				yield return new WaitForSeconds(.5f);
-				if(_settingsButton != null)
-					_settingsButton.color = Color.green;
-
-				yield return new WaitForSeconds(.5f);
-				if(_settingsButton != null)
-					_settingsButton.color = Color.white;
-			}
 		}
 
 		static void HackDropdown(DropdownWithTableView dropdown) {

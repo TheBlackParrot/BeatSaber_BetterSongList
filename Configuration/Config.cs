@@ -21,7 +21,6 @@ namespace BetterSongList {
 		public bool ClearFiltersOnPlaylistSelect { get; set; } = true;
 		public bool ModBasegameSearch { get; set; } = true;
 		public bool ExtendSongsScrollbar { get; set; } = true;
-		public float AccuracyMultiplier { get; set; } = 1f;
 		public bool EnableAlphabetScrollbar { get; set; } = true;
 
 		public bool AllowPluginSortsAndFilters { get; set; } = true;

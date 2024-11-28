@@ -27,6 +27,7 @@ namespace BetterSongList.HarmonyPatches.UI {
 
 				if(iconName == "Favorites") {
 					icon.sprite = await Utilities.LoadSpriteAsync(Utilities.GetResource(Assembly.GetExecutingAssembly(), "BetterSongList.UI.FavoritesIcon.png"));
+					icon.color = new Color32(255, 192, 64, 255);
 				} else {
 					await icon.SetImageAsync($"#{iconName}Icon");
 				}
@@ -45,13 +46,15 @@ namespace BetterSongList.HarmonyPatches.UI {
 				hhint.text = hoverHint;
 			}
 
-			ModifyValue(fields[0], "ScoreSaber PP Value", "Difficulty");
-			ModifyValue(fields[1], "Star Rating", "Favorites");
-			ModifyValue(fields[2], "NJS (Note Jump Speed)", "FastNotes");
-			ModifyValue(fields[3], "BeatSaver upload age (Months)", "Clock");
-
-			fields[0].richText = true;
-			fields[0].characterSpacing = -3f;
+			ModifyValue(fields[0], "Star Rating", "Favorites");
+			ModifyValue(fields[1], "Jump Speed", "FastNotes");
+			ModifyValue(fields[2], "Reaction Time", "Clock");
+			ModifyValue(fields[3], "Map Upload Date", "Height");
+			
+			foreach (var field in fields)
+			{
+				field.richText = true;
+			}
 		}
 
 		static StandardLevelDetailView lastInstance = null;
@@ -60,6 +63,8 @@ namespace BetterSongList.HarmonyPatches.UI {
 			if(lastInstance != null && lastInstance.isActiveAndEnabled)
 				lastInstance.RefreshContent();
 		}
+		
+		private enum MonthNames { Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec }
 
 		static void Postfix(StandardLevelDetailView __instance) {
 			if(extraUI == null) {
@@ -82,14 +87,14 @@ namespace BetterSongList.HarmonyPatches.UI {
 				var beatmapKey = __instance.beatmapKey;
 
 				if(!SongDetailsUtil.isAvailable) {
-					fields[0].text = fields[1].text = "N/A";
+					fields[0].text = "N/A";
 				} else if(SongDetailsUtil.songDetails != null) {
 					void wrapper() {
 						// For now we can assume non-standard diff is unranked. Probably not changing any time soon i guess
 						var ch = (SongDetailsCache.Structs.MapCharacteristic)BeatmapsUtil.GetCharacteristicFromDifficulty(beatmapKey);
 
 						if(ch != SongDetailsCache.Structs.MapCharacteristic.Standard) {
-							fields[0].text = fields[1].text = "-";
+							fields[0].text = "-";
 						} else {
 							var mh = BeatmapsUtil.GetHashOfLevel(__instance._beatmapLevel);
 
@@ -101,28 +106,22 @@ namespace BetterSongList.HarmonyPatches.UI {
 									ch
 								)
 							) {
-								fields[0].text = fields[1].text = fields[3].text = "?";
+								fields[0].text = fields[3].text = "-";
 								return;
 							} else {
 								var isSs = Config.Instance.PreferredLeaderboard == "ScoreSaber";
 								float stars = isSs ? diff.stars : diff.starsBeatleader;
 
-								if(stars <= 0) {
-									fields[0].text = fields[1].text = "-";
-								} else if(isSs) {
-									var acc = .984f - (Math.Max(0, (diff.stars - 1.5f) / (12.5f - 1.5f) / Config.Instance.AccuracyMultiplier) * .027f);
-									//acc *= 1 - ((1 - Config.Instance.AccuracyMultiplier) * 0.5f);
-									var pp = PPUtil.PPPercentage(acc) * diff.stars * 42.1f;
-
-									fields[0].text = string.Format("{0:0} <size=2.5>({1:0.0%})</size>", pp, acc);
-									fields[1].text = diff.stars.ToString("0.0#");
+								if(stars > 0) {
+									string[] starsRaw = stars.ToString("0.00").Split('.');
+									fields[0].text = starsRaw[0] + "<size=85%>." + starsRaw[1];
 								} else {
-									fields[0].text = "?";
-									fields[1].text = diff.starsBeatleader.ToString("0.0#");
+									fields[0].text = "-";
 								}
 							}
-
-							fields[3].text = SortModels.FolderDateSorter.GetMapAgeMonths((int)song.uploadTimeUnix);
+							
+							var uploadTime = DateTimeOffset.FromUnixTimeSeconds((int)song.uploadTimeUnix);
+							fields[3].text = ((MonthNames)uploadTime.Month - 1) + " " + uploadTime.Year.ToString().Substring(2, 2);
 						}
 					}
 					wrapper();
@@ -136,17 +135,19 @@ namespace BetterSongList.HarmonyPatches.UI {
 
 				// Basegame maps have no NJS or JD
 				var basicData = __instance._beatmapLevel.GetDifficultyBeatmapData(beatmapKey.beatmapCharacteristic, beatmapKey.difficulty);
-				var njs = basicData?.noteJumpMovementSpeed ?? 0;
+				float njs = basicData?.noteJumpMovementSpeed ?? 0;
 				if(njs == 0)
 					njs = BeatmapDifficultyMethods.NoteJumpMovementSpeed(beatmapKey.difficulty);
+				float rt = JumpDistanceCalculator.GetRt(__instance._beatmapLevel.beatsPerMinute, njs, basicData?.noteJumpStartBeatOffset ?? 0);
+				
+				string[] njsRaw = njs.ToString("0.##").Split('.');
+				fields[1].text = (njsRaw.Length == 1 ? njsRaw[0] : njsRaw[0] + "<size=80%>." + njsRaw[1]) + "<size=65%> NJS";
 
-				fields[2].text = njs.ToString("0.0#");
-
-				//var offset = Config.Instance.ShowMapJDInsteadOfOffset ?
-				//	JumpDistanceCalculator.GetJd(____selectedDifficultyBeatmap.level.beatsPerMinute, njs, ____selectedDifficultyBeatmap.noteJumpStartBeatOffset) :
-				//	____selectedDifficultyBeatmap.noteJumpStartBeatOffset;
-
-				//fields[3].text = offset.ToString(Config.Instance.ShowMapJDInsteadOfOffset ? "0.0" : "0.0#");
+				if(rt < 1000) {
+					fields[2].text = rt.ToString("0") + "<size=65%> MS";
+				} else {
+					fields[2].text = (rt/1000).ToString("0.#") + "<size=65%> S";
+				}
 			}
 		}
 	}

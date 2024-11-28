@@ -28,8 +28,6 @@ namespace BetterSongList {
 			FilterUI.Init();
 
 			PlaylistsUtil.Init();
-
-			PPUtil.Init();
 		}
 
 		[OnExit]

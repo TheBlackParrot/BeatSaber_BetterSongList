@@ -161,4 +161,7 @@
   <ItemGroup>
     <Reference Update="System.Runtime.Serialization"></Reference>
   </ItemGroup>
+  <ItemGroup>
+    <Folder Include="Screenshots\" />
+  </ItemGroup>
 </Project>

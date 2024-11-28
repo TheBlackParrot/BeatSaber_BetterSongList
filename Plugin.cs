@@ -27,8 +27,6 @@ namespace BetterSongList {
 			harmony.PatchAll(Assembly.GetExecutingAssembly());
 
 			PlaylistsUtil.Init();
-
-			PPUtil.Init();
 		}
 
 		[OnExit]

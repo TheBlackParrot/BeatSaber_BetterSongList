@@ -33,6 +33,7 @@ namespace BetterSongList.HarmonyPatches.UI {
 						Utilities.LoadSpriteFromAssemblyAsync("BetterSongList.UI.FavoritesIcon.png").ContinueWith(x => {
 							icon.sprite = favIcon = x.Result;
 						});
+						icon.color = new Color32(255, 192, 64, 255);
 					}
 				} else {
 					icon.SetImageAsync($"#{iconName}Icon");

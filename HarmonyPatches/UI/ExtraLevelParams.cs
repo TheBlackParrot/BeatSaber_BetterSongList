@@ -4,6 +4,7 @@ using HarmonyLib;
 using HMUI;
 using System;
 using System.Collections;
+using System.Globalization;
 using System.Threading;
 using System.Threading.Tasks;
 using IPA.Utilities;
@@ -23,6 +24,8 @@ namespace BetterSongList.HarmonyPatches.UI
 
 		private static HoverHintController _hhc;
 		private static Sprite _favIcon;
+		
+		private static readonly char DecimalSeparator = CultureInfo.CurrentCulture.NumberFormat.NumberDecimalSeparator[0];
 
 		private static void ModifyValue(TextMeshProUGUI text, string hoverHint, string iconName)
 		{
@@ -119,7 +122,7 @@ namespace BetterSongList.HarmonyPatches.UI
 
 				if(stars > 0)
 				{
-					string[] starsRaw = stars.ToString("0.00").Split('.');
+					string[] starsRaw = stars.ToString("0.00").Split(DecimalSeparator);
 					_fields[0].text = $"{starsRaw[0]}<size=85%>.{starsRaw[1]}";
 				}
 				else
@@ -131,7 +134,25 @@ namespace BetterSongList.HarmonyPatches.UI
 				_fields[3].text = $"{(MonthNames)uploadTime.Month - 1} {uploadTime.Year.ToString().Substring(2, 2)}";
 			}
 		}
-		
+
+		// this is so bizarre and i hate it
+		private static int _lastNoteCount;
+		private static int _lastObstacleCount;
+		private static int _lastBombCount;
+
+		private static void ModifyBaseGameParamDisplayInTheWeirdestWay()
+		{
+			_lastNoteCount = int.Parse(_lastInstance._levelParamsPanel._notesCountText.text);
+			_lastObstacleCount = int.Parse(_lastInstance._levelParamsPanel._obstaclesCountText.text);
+			_lastBombCount = int.Parse(_lastInstance._levelParamsPanel._bombsCountText.text);
+
+			string[] npsParts = (_lastNoteCount / _lastInstance._beatmapLevel.songDuration).ToString("F2").Split(DecimalSeparator);
+
+			_lastInstance._levelParamsPanel._notesPerSecondText.text = $"{npsParts[0]}<size=80%>.{npsParts[1]}<size=65%><alpha=#C0> NPS";
+			_lastInstance._levelParamsPanel._notesCountText.text = $"{_lastNoteCount:N0}";
+			_lastInstance._levelParamsPanel._obstaclesCountText.text = $"{_lastObstacleCount:N0}";
+			_lastInstance._levelParamsPanel._bombsCountText.text = $"{_lastBombCount:N0}";
+		}
 
 		// ReSharper disable UnusedMember.Local
 		private enum MonthNames { Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec }
@@ -143,8 +164,21 @@ namespace BetterSongList.HarmonyPatches.UI
 		private static CanvasGroup _baseGameParamsCanvasGroup;
 		private static void FadeInParams(float f)
 		{
+			if (f == 0)
+			{
+				// yes, really
+				ModifyBaseGameParamDisplayInTheWeirdestWay();
+			}
+			
 			_extraParamsCanvasGroup.alpha = f;
 			_baseGameParamsCanvasGroup.alpha = f;
+		}
+
+		private static void ModifyLevelParamTmpSettings(TextMeshProUGUI text)
+		{
+			text.color = Color.white;
+			text.transform.parent.Find("Icon").GetComponent<ImageView>().color = TransparentWhite;
+			text.richText = true;
 		}
 
 		[UsedImplicitly]
@@ -154,15 +188,11 @@ namespace BetterSongList.HarmonyPatches.UI
 			if(!_extraUI)
 			{
 				_baseGameParamsCanvasGroup = __instance._levelParamsPanel.GetComponentInChildren<CanvasGroup>();
-				
-				__instance._levelParamsPanel._bombsCountText.color = Color.white;
-				__instance._levelParamsPanel._bombsCountText.transform.parent.Find("Icon").GetComponent<ImageView>().color = TransparentWhite;
-				__instance._levelParamsPanel._notesCountText.color = Color.white;
-				__instance._levelParamsPanel._notesCountText.transform.parent.Find("Icon").GetComponent<ImageView>().color = TransparentWhite;
-				__instance._levelParamsPanel._obstaclesCountText.color = Color.white;
-				__instance._levelParamsPanel._obstaclesCountText.transform.parent.Find("Icon").GetComponent<ImageView>().color = TransparentWhite;
-				__instance._levelParamsPanel._notesPerSecondText.color = Color.white;
-				__instance._levelParamsPanel._notesPerSecondText.transform.parent.Find("Icon").GetComponent<ImageView>().color = TransparentWhite;
+
+				ModifyLevelParamTmpSettings(__instance._levelParamsPanel._notesPerSecondText);
+				ModifyLevelParamTmpSettings(__instance._levelParamsPanel._notesCountText);
+				ModifyLevelParamTmpSettings(__instance._levelParamsPanel._obstaclesCountText);
+				ModifyLevelParamTmpSettings(__instance._levelParamsPanel._bombsCountText);
 				
 				// I wanted to make a custom UI for this with bsml first... But this is MUCH easier and probably looks better
 				_extraUI = Object.Instantiate(__instance._levelParamsPanel, __instance._levelParamsPanel.transform.parent).gameObject;
@@ -227,8 +257,8 @@ namespace BetterSongList.HarmonyPatches.UI
 			}
 
 			// Basegame maps have no NJS or JD
-			var basicData = __instance._beatmapLevel.GetDifficultyBeatmapData(beatmapKey.beatmapCharacteristic, beatmapKey.difficulty);
-			
+			BeatmapBasicData basicData = __instance._beatmapLevel.GetDifficultyBeatmapData(beatmapKey.beatmapCharacteristic, beatmapKey.difficulty);
+
 			float njs = basicData?.noteJumpMovementSpeed ?? beatmapKey.difficulty.DefaultNoteJumpMovementSpeed();
 			if (njs == 0)
 			{
@@ -237,10 +267,10 @@ namespace BetterSongList.HarmonyPatches.UI
 			
 			float rt = JumpDistanceCalculator.GetRt(__instance._beatmapLevel.beatsPerMinute, njs, basicData?.noteJumpStartBeatOffset ?? 0);
 				
-			string[] njsRaw = njs.ToString("0.##").Split('.');
-			_fields[1].text = (njsRaw.Length == 1 ? njsRaw[0] : njsRaw[0] + "<size=80%>." + njsRaw[1]) + "<size=65%> NJS";
+			string[] njsRaw = njs.ToString("0.##").Split(DecimalSeparator);
+			_fields[1].text = (njsRaw.Length == 1 ? njsRaw[0] : njsRaw[0] + "<size=80%>." + njsRaw[1]) + "<size=65%><alpha=#C0> NJS";
 
-			_fields[2].text = rt < 1000 ? $"{rt:0}<size=65%> MS" : $"{rt / 1000:0.#}<size=65%> S";
+			_fields[2].text = rt < 1000 ? $"{rt:0}<size=65%><alpha=#C0> MS" : $"{rt / 1000:0.#}<size=65%><alpha=#C0> S";
 		}
 	}
 }

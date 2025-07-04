@@ -5,6 +5,7 @@ using HMUI;
 using System;
 using System.Collections;
 using System.Globalization;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using IPA.Utilities;
@@ -159,6 +160,7 @@ namespace BetterSongList.HarmonyPatches.UI
 		// ReSharper restore UnusedMember.Local
 		
 		private static readonly Color TransparentWhite = new Color(1, 1, 1, 0.75f);
+		private static readonly Color TransparentBlack = new Color(0, 0, 0, 0.9f);
 
 		private static CanvasGroup _extraParamsCanvasGroup;
 		private static CanvasGroup _baseGameParamsCanvasGroup;
@@ -188,7 +190,11 @@ namespace BetterSongList.HarmonyPatches.UI
 			if(!_extraUI)
 			{
 				__instance.transform.Find("BeatmapDifficulty").transform.localPosition -= new Vector3(0f, 3f, 0f);
+				__instance.transform.Find("BeatmapDifficulty/BG").GetComponent<ImageView>().gradient = false;
+				__instance.transform.Find("BeatmapDifficulty/BG").GetComponent<ImageView>().color = TransparentBlack;
 				__instance.transform.Find("BeatmapCharacteristic").transform.localPosition -= new Vector3(0f, 3f, 0f);
+				__instance.transform.Find("BeatmapCharacteristic/BG").GetComponent<ImageView>().gradient = false;
+				__instance.transform.Find("BeatmapCharacteristic/BG").GetComponent<ImageView>().color = TransparentBlack;
 				
 				_baseGameParamsCanvasGroup = __instance._levelParamsPanel.GetComponentInChildren<CanvasGroup>();
 

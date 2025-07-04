@@ -10,12 +10,12 @@ using SongDetailsCache.Structs;
 
 namespace BetterSongList {
 	public static class SortMethods {
-		public static readonly ISorter alphabeticalSongName = new ComparableFunctionSorterWithLegend(
+		private static readonly ISorter alphabeticalSongName = new ComparableFunctionSorterWithLegend(
 			(songa, songb) => string.Compare(songa.songName, songb.songName, StringComparison.Ordinal),
 			song => song.songName.Length > 0 ? song.songName.Substring(0, 1) : null
 		);
 
-		public static readonly ISorter bpm = new PrimitiveFunctionSorterWithLegend(
+		private static readonly ISorter bpm = new PrimitiveFunctionSorterWithLegend(
 			song => song.beatsPerMinute,
 			song => Math.Round(song.beatsPerMinute).ToString(CultureInfo.InvariantCulture)
 		);
@@ -31,9 +31,10 @@ namespace BetterSongList {
 				return authors.Length > 0 && authors[0].Length > 0 ? authors[0].Substring(0, 1) : null;
 			}
 		);
-		public static readonly ISorter downloadTime = new FolderDateSorter();
 
-		internal static float? StarsProcessor(object xx) {
+		private static readonly ISorter downloadTime = new FolderDateSorter();
+
+		private static float? StarsProcessor(object xx) {
 			var x = (Song)xx;
 			if(!x.rankedStates.HasFlag(RankedStates.ScoresaberRanked))
 				return null;
@@ -64,14 +65,14 @@ namespace BetterSongList {
 			return ret == 0 ? (float?)null : ret;
 		}
 
-		public static readonly ISorter stars = new BasicSongDetailsSorterWithLegend(StarsProcessor, x => {
+		private static readonly ISorter stars = new BasicSongDetailsSorterWithLegend(StarsProcessor, x => {
 			float? y = StarsProcessor((Song)x);
 			return y?.ToString("0.0");
 		});
 
 		private const float FunnyOptim = 1 / 60f;
 
-		public static readonly ISorter songLength = new PrimitiveFunctionSorterWithLegend(
+		private static readonly ISorter songLength = new PrimitiveFunctionSorterWithLegend(
 			song => song.songDuration,
 			song => (song.songDuration < 60
 				? "<1"
@@ -80,7 +81,7 @@ namespace BetterSongList {
 
 		private static int GetQuarter(DateTime date) => date.Month > 9 ? 4 : date.Month > 6 ? 3 : date.Month > 3 ? 2 : 1;
 
-		public static readonly ISorter beatSaverDate = new BasicSongDetailsSorterWithLegend(
+		private static readonly ISorter beatSaverDate = new BasicSongDetailsSorterWithLegend(
 			x => ((Song)x).uploadTimeUnix,
 			x => {
 			var d = ((Song)x).uploadTime;
@@ -98,6 +99,7 @@ namespace BetterSongList {
 			{ "Default", null }
 		};
 
+		// ReSharper disable once MemberCanBePrivate.Global
 		public static bool Register(ITransformerPlugin sorter) {
 			string name = sorter.name;
 

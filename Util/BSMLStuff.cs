@@ -9,8 +9,7 @@ namespace BetterSongList.Util {
 			if(pparams != null)
 				return pparams;
 
-			if(viewName == null)
-				viewName = host.GetType().Name;
+			viewName ??= host.GetType().Name;
 
 			return pparams = BSMLParser.Instance.Parse(Utilities.GetResourceContent(Assembly.GetExecutingAssembly(), $"BetterSongList.UI.BSML.SplitViews.{viewName}.bsml"), targetGameObject, host);
 		}

@@ -50,8 +50,8 @@ namespace BetterSongList.SortModels {
 			if(SongDetailsUtil.SongDetails == null)
 				return null;
 
-			float? _Get(BeatmapLevel x) {
-				var h = BeatmapsUtil.GetHashOfLevel(x);
+			float? _Get(BeatmapLevel y) {
+				var h = BeatmapsUtil.GetHashOfLevel(y);
 				if(h == null || !SongDetailsUtil.SongDetails.Instance.songs.FindByHash(h, out var song))
 					return null;
 
@@ -63,11 +63,9 @@ namespace BetterSongList.SortModels {
 
 		public string GetUnavailabilityReason() => SongDetailsUtil.GetUnavailabilityReason();
 
-		public Task Prepare(CancellationToken cancelToken) {
-			if(!isReady)
-				return SongDetailsUtil.TryGet();
-
-			return Task.CompletedTask;
+		public Task Prepare(CancellationToken cancelToken)
+		{
+			return !isReady ? SongDetailsUtil.TryGet() : Task.CompletedTask;
 		}
 	}
 }

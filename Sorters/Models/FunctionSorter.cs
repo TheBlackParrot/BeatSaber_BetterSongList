@@ -15,7 +15,7 @@ namespace BetterSongList.SortModels {
 
 		public float? GetValueFor(BeatmapLevel x) => sortValueGetter(x);
 
-		public PrimitiveFunctionSorter(Func<BeatmapLevel, float?> sortValueGetter) {
+		protected PrimitiveFunctionSorter(Func<BeatmapLevel, float?> sortValueGetter) {
 			this.sortValueGetter = sortValueGetter;
 		}
 	}
@@ -37,7 +37,7 @@ namespace BetterSongList.SortModels {
 		}
 	}
 
-	public class ComparableFunctionSorter : ISorter, ISorterCustom, IComparer<BeatmapLevel> {
+	public class ComparableFunctionSorter : ISorterCustom, IComparer<BeatmapLevel> {
 		public bool isReady => true;
 
 		Func<BeatmapLevel, BeatmapLevel, int> sortValueGetter;
@@ -52,7 +52,7 @@ namespace BetterSongList.SortModels {
 
 		public int Compare(BeatmapLevel x, BeatmapLevel y) => sortValueGetter(x, y);
 
-		public ComparableFunctionSorter(Func<BeatmapLevel, BeatmapLevel, int> sortValueGetter) {
+		protected ComparableFunctionSorter(Func<BeatmapLevel, BeatmapLevel, int> sortValueGetter) {
 			this.sortValueGetter = sortValueGetter;
 		}
 	}

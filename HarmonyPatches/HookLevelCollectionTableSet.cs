@@ -86,7 +86,7 @@ namespace BetterSongList.HarmonyPatches {
 				var outV = previewBeatmapLevels.AsEnumerable();
 
 				if(filter?.isReady == true) {
-					outV = outV.Where(filter.GetValueFor);
+					outV = outV?.Where(filter.GetValueFor);
 
 #if DEBUG
 					Plugin.Log.Info(string.Format("Filtering with {0} took {1}ms and yielded {2} levels", filter, sw.Elapsed.TotalMilliseconds, outV.Count()));
@@ -102,21 +102,21 @@ namespace BetterSongList.HarmonyPatches {
 					} else {
 						var pSorter = (ISorterPrimitive)sorter;
 						outV = Config.Instance.SortAsc ?
-							outV.OrderBy(x => pSorter.GetValueFor(x) ?? float.MaxValue) :
-							outV.OrderByDescending(x => pSorter.GetValueFor(x) ?? float.MinValue);
+							outV?.OrderBy(x => pSorter.GetValueFor(x) ?? float.MaxValue) :
+							outV?.OrderByDescending(x => pSorter.GetValueFor(x) ?? float.MinValue);
 					}
 #if DEBUG
 					Plugin.Log.Info(string.Format("Sorting with {0} took {1}ms", sorter, sw.Elapsed.TotalMilliseconds));
 #endif
 				}
 
-				var beatmapLevels = outV.ToArray();
+				var beatmapLevels = outV?.ToArray();
 				previewBeatmapLevels = beatmapLevels;
 
 				if(sorter is ISorterWithLegend sl && Config.Instance.EnableAlphabetScrollbar)
 					customLegend = sl.BuildLegend(beatmapLevels).ToArray();
 			} catch(Exception ex) {
-				Plugin.Log.Warn(string.Format("FilterWrapper() Exception: {0}", ex));
+				Plugin.Log.Warn($"FilterWrapper() Exception: {ex}");
 			}
 		}
 
@@ -160,7 +160,7 @@ namespace BetterSongList.HarmonyPatches {
 			Plugin.Log.Debug("LevelCollectionTableView.SetData():Prefix");
 #endif
 			// If SetData is called with the literal same maplist as before we might as well ignore it
-			if(beatmapLevels == lastInMapList) {
+			if(ReferenceEquals(beatmapLevels, lastInMapList)) {
 #if TRACE
 				Plugin.Log.Debug("LevelCollectionTableView.SetData():Prefix => beatmapLevels == lastInMapList");
 #endif
@@ -190,7 +190,7 @@ namespace BetterSongList.HarmonyPatches {
 				beatmapLevelsAreSorted = false;
 
 			if(PrepareStuffIfNecessary(() => Refresh(true))) {
-				Plugin.Log.Debug(string.Format("Stuff isnt ready yet... Preparing it and then reloading list: Sorter {0}, Filter {1}", sorter?.isReady, filter?.isReady));
+				Plugin.Log.Debug($"Stuff isnt ready yet... Preparing it and then reloading list: Sorter {sorter?.isReady}, Filter {filter?.isReady}");
 			}
 
 			XD.FunnyNull(FilterUI.persistentNuts._filterLoadingIndicator)?.gameObject.SetActive(false);
@@ -211,12 +211,12 @@ namespace BetterSongList.HarmonyPatches {
 		static IEnumerator TryReselectLastSelectedSong(LevelCollectionTableView __instance) {
 			yield return null;
 
-			if(__instance == null || (lastOutMapList?.Count ?? 0) == 0)
+			if(__instance is null || (lastOutMapList?.Count ?? 0) == 0)
 				yield break;
 
 			var idx = Math.Max(0, lastOutMapList.FindIndex(x => x.levelID == Config.Instance.LastSong) + (__instance._showLevelPackHeader ? 1 : 0));
 
-			Plugin.Log.Debug(string.Format("LevelCollectionTableView.SetData():Postfix => TryReselectLastSelectedSong: Scrolling to song with idx {0}", idx));
+			Plugin.Log.Debug($"LevelCollectionTableView.SetData():Postfix => TryReselectLastSelectedSong: Scrolling to song with idx {idx}");
 
 			__instance._selectedRow = idx;
 			__instance._tableView.SelectCellWithIdx(idx, false);

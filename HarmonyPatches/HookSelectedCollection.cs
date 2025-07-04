@@ -24,7 +24,7 @@ namespace BetterSongList.HarmonyPatches {
 				if(beatmapLevelCollection != null && beatmapLevelCollection != SongCore.Loader.CustomLevelsPack) {
 					FilterUI.SetSort(null, false, false);
 
-					if(doRestoreFilter = HookLevelCollectionTableSet.filter != null)
+					if(doRestoreFilter == (HookLevelCollectionTableSet.filter != null))
 						FilterUI.ClearFilter(false);
 					// Restore previously used Sort and filter for non-playlists
 				} else if(lastSelectedCollection != null) {

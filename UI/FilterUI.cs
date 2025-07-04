@@ -40,8 +40,10 @@ namespace BetterSongList.UI {
 		static Dictionary<string, ISorter> sortOptions = null;
 		static Dictionary<string, IFilter> filterOptions = null;
 
+		// ReSharper disable FieldCanBeMadeReadOnly.Local
 		[UIValue("_sortOptions")] static List<object> _sortOptions = new List<object>();
 		[UIValue("_filterOptions")] static List<object> _filterOptions = new List<object>();
+		// ReSharper restore FieldCanBeMadeReadOnly.Local
 
 		static void UpdateVisibleTransformers() {
 			static bool CheckIsVisible(ITransformerPlugin plugin) {
@@ -56,16 +58,18 @@ namespace BetterSongList.UI {
 			_sortOptions.Clear();
 			_sortOptions.AddRange(sortOptions.Select(x => x.Key));
 
+			// ReSharper disable SuspiciousTypeConversion.Global
 			filterOptions = FilterMethods.methods
 				.Where(x => !(x.Value is ITransformerPlugin plugin) || CheckIsVisible(plugin))
 				.OrderBy(x => (x.Value is ITransformerPlugin) ? 0 : 1)
 				.ToDictionary(x => x.Key, x => x.Value);
+			// ReSharper restore SuspiciousTypeConversion.Global
 
 			_filterOptions.Clear();
 			_filterOptions.AddRange(filterOptions.Select(x => x.Key));
 		}
 
-		public void UpdateDropdowns() {
+		private void UpdateDropdowns() {
 			if(_sortDropdown != null)
 				HackDropdown(_sortDropdown);
 
@@ -81,11 +85,9 @@ namespace BetterSongList.UI {
 		public void InitializeSortsAndFilters() {
 			initialized = true;
 
-			T BLA<T>(string x, Dictionary<string, T> y) where T : class {
-				if(y.TryGetValue(x, out var z))
-					return z;
-
-				return null;
+			T BLA<T>(string x, Dictionary<string, T> y) where T : class
+			{
+				return y.TryGetValue(x, out var z) ? z : null;
 			}
 
 			_sortDropdown.selectedIndex = Math.Max(0, _sortOptions.IndexOf(BLA(Config.Instance.LastSort, sortOptions)));
@@ -106,6 +108,7 @@ namespace BetterSongList.UI {
 
 			if(unavReason != null) {
 				persistentNuts?.ShowErrorASAP($"Can't sort by {selected} - {unavReason}");
+				// ReSharper disable once TailRecursiveCall
 				SetSort(null, false, false);
 				return;
 			}
@@ -140,6 +143,7 @@ namespace BetterSongList.UI {
 
 			if(unavReason != null) {
 				persistentNuts?.ShowErrorASAP($"Can't filter by {selected} - {unavReason}");
+				// ReSharper disable once TailRecursiveCall
 				SetFilter(null, false, false);
 				return;
 			}
@@ -160,7 +164,7 @@ namespace BetterSongList.UI {
 			XD.FunnyNull(persistentNuts._filterDropdown)?.SelectCellWithIdx(_filterOptions.IndexOf(selected));
 		}
 
-		internal static void SetSortDirection(bool ascending, bool refresh = true) {
+		private static void SetSortDirection(bool ascending, bool refresh = true) {
 			if(HookLevelCollectionTableSet.sorter == null)
 				return;
 
@@ -196,11 +200,9 @@ namespace BetterSongList.UI {
 			 * 
 			 * Not that it matters, but for now we can do this.
 			 */
-			var ml = (HookLevelCollectionTableSet.lastOutMapList ?? 
-				HookLevelCollectionTableSet.lastInMapList)
-				as BeatmapLevel[];
 
-			if(ml == null)
+			if(!((HookLevelCollectionTableSet.lastOutMapList ?? 
+			      HookLevelCollectionTableSet.lastInMapList) is BeatmapLevel[] ml))
 				return;
 
 			if(ml.Length < 2)
@@ -252,14 +254,12 @@ namespace BetterSongList.UI {
 			BSMLParser.Instance.Parse(Utilities.GetResourceContent(Assembly.GetExecutingAssembly(), "BetterSongList.UI.BSML.MainUI.bsml"), target.gameObject, persistentNuts);
 			persistentNuts.rootTransform.localScale *= 0.7f;
 
-			(target as RectTransform).sizeDelta += new Vector2(0, 2);
+			((RectTransform)target).sizeDelta += new Vector2(0, 2);
 			target.GetChild(0).position -= new Vector3(0, 0.02f);
 		}
 		
 		BSMLParserParams settingsViewParams = null;
 		void SettingsOpened() {
-			Config.Instance.SettingsSeenInVersion = Assembly.GetExecutingAssembly().GetName().Version.ToString();
-
 			BSMLStuff.InitSplitView(ref settingsViewParams, rootTransform.gameObject, SplitViews.Settings.instance).EmitEvent("ShowSettings");
 		}
 
@@ -268,17 +268,19 @@ namespace BetterSongList.UI {
 			settingsViewParams = null;
 			UpdateVisibleTransformers();
 
-			foreach(var x in sortOptions) {
-				if(x.Value == HookLevelCollectionTableSet.sorter) {
-					SetSort(x.Key, false, false);
-					break;
-				}
+			// ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+			foreach(var x in sortOptions)
+			{
+				if (x.Value != HookLevelCollectionTableSet.sorter) continue;
+				SetSort(x.Key, false, false);
+				break;
 			}
-			foreach(var x in filterOptions) {
-				if(x.Value == HookLevelCollectionTableSet.filter) {
-					SetFilter(x.Key, false, false);
-					break;
-				}
+			// ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+			foreach(var x in filterOptions)
+			{
+				if (x.Value != HookLevelCollectionTableSet.filter) continue;
+				SetFilter(x.Key, false, false);
+				break;
 			}
 
 			UpdateDropdowns();

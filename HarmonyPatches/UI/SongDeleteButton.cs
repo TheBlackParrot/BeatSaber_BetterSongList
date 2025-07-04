@@ -12,6 +12,7 @@ using System.Threading.Tasks;
 using SongCore;
 using UnityEngine;
 using UnityEngine.UI;
+using Object = UnityEngine.Object;
 
 namespace BetterSongList.HarmonyPatches.UI {
 	[HarmonyPatch(typeof(StandardLevelDetailView), nameof(StandardLevelDetailView.RefreshContent))]
@@ -71,7 +72,7 @@ namespace BetterSongList.HarmonyPatches.UI {
 		[HarmonyPriority(int.MinValue)]
 		static void Postfix(StandardLevelDetailView __instance) {
 			if(deleteButton == null && __instance._practiceButton != null) {
-				var newButton = GameObject.Instantiate(__instance._practiceButton.gameObject, __instance._practiceButton.transform.parent);
+				var newButton = Object.Instantiate(__instance._practiceButton.gameObject, __instance._practiceButton.transform.parent);
 				deleteButton = newButton.GetComponentInChildren<Button>();
 
 				deleteButton.onClick.AddListener(DeleteConfirmHandler.instance.Value.ConfirmDelete);
@@ -91,7 +92,7 @@ namespace BetterSongList.HarmonyPatches.UI {
 				icon.material = Resources.FindObjectsOfTypeAll<Material>().FirstOrDefault(m => m.name == "UINoGlow");
 				icon.SetImageAsync("#DeleteIcon");
 
-				GameObject.DestroyImmediate(t.gameObject);
+				Object.DestroyImmediate(t.gameObject);
 
 				BSMLParser.Instance.Parse(
 					Utilities.GetResourceContent(Assembly.GetExecutingAssembly(), "BetterSongList.UI.BSML.SongDeleteConfirm.bsml"),

@@ -61,7 +61,7 @@ namespace BetterSongList.SortModels {
 						songTimes[song.levelID] = (int)File.GetCreationTimeUtc(levelFolderPath + fpath).ToUnixTime();
 					}
 
-					Plugin.Log.Debug(string.Format("Getting SongFolder dates took {0}ms", xy.ElapsedMilliseconds));
+					Plugin.Log.Debug($"Getting SongFolder dates took {xy.ElapsedMilliseconds}ms");
 					wipTask.TrySetResult(true);
 					wipTask = null;
 					isLoading = false;
@@ -80,7 +80,7 @@ namespace BetterSongList.SortModels {
 
 		const float MONTH_SECS = 1f / (60 * 60 * 24 * 30.4f);
 
-		public static string GetMapAgeMonths(int uploadDateUtc, int curUtc = 0) {
+		private static string GetMapAgeMonths(int uploadDateUtc, int curUtc = 0) {
 			if(curUtc == 0)
 				curUtc = (int)DateTime.UtcNow.ToUnixTime();
 
@@ -93,12 +93,7 @@ namespace BetterSongList.SortModels {
 		}
 
 		public IEnumerable<KeyValuePair<string, int>> BuildLegend(BeatmapLevel[] levels) {
-			return SongListLegendBuilder.BuildFor(levels, (level) => {
-				if(!songTimes.ContainsKey(level.levelID))
-					return null;
-
-				return GetMapAgeMonths(songTimes[level.levelID]);
-			});
+			return SongListLegendBuilder.BuildFor(levels, (level) => !songTimes.ContainsKey(level.levelID) ? null : GetMapAgeMonths(songTimes[level.levelID]));
 		}
 	}
 }

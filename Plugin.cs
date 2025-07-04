@@ -12,7 +12,7 @@ namespace BetterSongList {
 	public class Plugin {
 		internal static Plugin Instance { get; private set; }
 		internal static IPALogger Log { get; private set; }
-		internal static Harmony harmony { get; private set; }
+		private static Harmony harmony { get; set; }
 
 		[Init]
 		public void Init(IPALogger logger, IPA.Config.Config conf) {

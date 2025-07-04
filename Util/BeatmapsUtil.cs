@@ -13,6 +13,7 @@
 			if(id.Length < 53)
 				return null;
 
+			// ReSharper disable once ConvertIfStatementToReturnStatement
 			if(id[12] != '_') // custom_level_<hash, 40 chars>
 				return null;
 
@@ -25,20 +26,20 @@
 			if(d == null || d > 4)
 				return 0;
 
-			// 360 and 90 are "flipped" as far as the enum goes
-			if(d == 3)
-				d = 4;
-			else if(d == 4)
-				d = 3;
+			d = d switch
+			{
+				// 360 and 90 are "flipped" as far as the enum goes
+				3 => 4,
+				4 => 3,
+				_ => d
+			};
 
 			return (int)d + 1;
 		}
 
-		public static string ConcatMappers(string[] allmappers) {
-			if(allmappers.Length == 1)
-				return allmappers[0];
-
-			return string.Join(" ", allmappers);
+		public static string ConcatMappers(string[] allmappers)
+		{
+			return allmappers.Length == 1 ? allmappers[0] : string.Join(" ", allmappers);
 		}
 	}
 }

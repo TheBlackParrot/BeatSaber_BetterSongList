@@ -10,7 +10,8 @@ namespace BetterSongList.FilterModels {
 		static TaskCompletionSource<bool> wipTask = null;
 		static bool inited = false;
 		public Task Prepare(CancellationToken cancelToken) => Prepare(cancelToken, false);
-		public Task Prepare(CancellationToken cancelToken, bool fullReload) {
+
+		private static Task Prepare(CancellationToken cancelToken, bool fullReload) {
 			if(wipTask?.Task.IsCompleted != false)
 				wipTask = new TaskCompletionSource<bool>();
 
@@ -27,7 +28,7 @@ namespace BetterSongList.FilterModels {
 				return false;
 
 			return SongCore.Collections.GetCustomLevelSongData(mid)?
-				._difficulties?.Any(x => x.additionalDifficultyData._requirements.Any(x => x.Length != 0)) == true;
+				._difficulties?.Any(x => x.additionalDifficultyData._requirements.Any(y => y.Length != 0)) == true;
 		}
 	}
 }

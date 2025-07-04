@@ -20,7 +20,7 @@ namespace BetterSongList.FilterModels {
 					LocalScoresUtil.Load();
 				} catch { }
 				t.SetResult(true);
-			});
+			}, cancelToken);
 			return t.Task;
 		}
 

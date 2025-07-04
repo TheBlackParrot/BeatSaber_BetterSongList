@@ -4,17 +4,24 @@ using HarmonyLib;
 
 namespace BetterSongList.Util {
 	public static class LocalScoresUtil {
-		public static PlayerDataModel playerDataModel { get; private set; }
+		private static PlayerDataModel playerDataModel { get; set; }
 		static HashSet<string> playedMaps = new HashSet<string>(500);
 
 		public static bool hasScores => playerDataModel != null;
 
-		public static void Load() {
+		public static void Load()
+		{
 			if (playerDataModel == null)
 				playerDataModel = Object.FindObjectOfType<PlayerDataModel>();
-
-			foreach(var x in playerDataModel?.playerData?.levelsStatsData) {
-				if(!x.Value.validScore)
+			
+			if (playerDataModel?.playerData?.levelsStatsData == null)
+			{
+				return;
+			}
+			// ReSharper disable once ForeachCanBePartlyConvertedToQueryUsingAnotherGetEnumerator
+			foreach (var x in playerDataModel.playerData.levelsStatsData)
+			{
+				if (!x.Value.validScore)
 					continue;
 
 				playedMaps.Add(x.Key.levelId);
@@ -30,6 +37,7 @@ namespace BetterSongList.Util {
 			}
 		}
 
+		// ReSharper disable once MemberCanBePrivate.Global
 		public static bool HasLocalScore(string levelId) => playedMaps.Contains(levelId);
 
 		public static bool HasLocalScore(BeatmapLevel level) => HasLocalScore(level.levelID);

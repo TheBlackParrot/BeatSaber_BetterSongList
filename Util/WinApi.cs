@@ -9,7 +9,7 @@ namespace BetterSongList.Util {
 
         // Struct which contains information that the SHFileOperation function uses to perform file operations. 
         [StructLayout(LayoutKind.Sequential, CharSet = CharSet.Auto)]
-        public struct SHFILEOPSTRUCT {
+        private struct SHFILEOPSTRUCT {
             public IntPtr hwnd;
             [MarshalAs(UnmanagedType.U4)]
             public int wFunc;
@@ -26,10 +26,12 @@ namespace BetterSongList.Util {
         static extern int SHFileOperation(ref SHFILEOPSTRUCT FileOp);
 
         public static void DeleteFileOrFolder(string path, bool recycle = true) {
-            SHFILEOPSTRUCT fileop = new SHFILEOPSTRUCT();
-            fileop.wFunc = FO_DELETE;
-            fileop.pFrom = path + '\0' + '\0';
-            fileop.fFlags = FOF_NOCONFIRMATION;
+            SHFILEOPSTRUCT fileop = new SHFILEOPSTRUCT
+            {
+                wFunc = FO_DELETE,
+                pFrom = path + '\0' + '\0',
+                fFlags = FOF_NOCONFIRMATION
+            };
 
             if(recycle)
                 fileop.fFlags |= FOF_ALLOWUNDO;

@@ -169,7 +169,7 @@ namespace BetterSongList.HarmonyPatches {
 			}
 
 			// Playlistlib has its own custom wrapping class for Playlists so it can properly track duplicates, so we need to use its collection
-			if(HookSelectedCollection.lastSelectedCollection != null && PlaylistsUtil.hasPlaylistLib)
+			if(HookSelectedCollection.lastSelectedCollection != null && PlaylistsUtil.HasPlaylistLib)
 				beatmapLevels = PlaylistsUtil.GetLevelsForLevelCollection(HookSelectedCollection.lastSelectedCollection) ?? beatmapLevels;
 
 #if TRACE

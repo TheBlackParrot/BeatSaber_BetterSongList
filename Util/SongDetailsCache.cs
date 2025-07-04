@@ -2,51 +2,68 @@
 using System.Threading.Tasks;
 
 namespace BetterSongList.Util {
-	static class SongDetailsUtil {
-		public class AntiBox {
-			public readonly SongDetails instance;
+	internal static class SongDetailsUtil {
+		public class AntiBox
+		{
+			public readonly SongDetails Instance;
 
-			public AntiBox(SongDetails instance) {
-				this.instance = instance;
+			public AntiBox(SongDetails instance)
+			{
+				Instance = instance;
 			}
 		}
 
-		public static bool finishedInitAttempt { get; private set; } = false;
-		public static bool attemptedToInit { get; private set; } = false;
+		public static bool FinishedInitAttempt { get; private set; }
 
-		static bool CheckAvailable() {
+		private static bool CheckAvailable() {
 			var v = IPA.Loader.PluginManager.GetPluginFromId("SongDetailsCache");
 
-			if(v == null)
+			if (v == null)
+			{
 				return false;
+			}
 
 			return v.HVersion >= new Hive.Versioning.Version("1.1.5");
 		}
-		public static bool isAvailable => CheckAvailable();
-		//public static object instance { get; private set; }
-		public static AntiBox songDetails = null;
+		public static bool IsAvailable => CheckAvailable();
+		public static AntiBox SongDetails;
 
 		public static string GetUnavailabilityReason() {
-			if(!isAvailable)
+			if (!IsAvailable)
+			{
 				return "Your Version of 'SongDetailsCache' is either outdated, or you are missing it entirely";
+			}
 
-			if(finishedInitAttempt && songDetails == null)
+			if (FinishedInitAttempt && SongDetails == null)
+			{
 				return "SongDetailsCache failed to initialize for some reason. Try restarting your game, that might fix it";
+			}
 
 			return null;
 		}
 
 		public static async Task<AntiBox> TryGet() {
-			if(!finishedInitAttempt) {
-				attemptedToInit = true;
-				try {
-					if(isAvailable)
-						return songDetails = new AntiBox(await SongDetails.Init());
-				} catch { } finally {
-					finishedInitAttempt = true;
+			if (FinishedInitAttempt)
+			{
+				return SongDetails;
+			}
+
+			try {
+				if (IsAvailable)
+				{
+					return SongDetails = new AntiBox(await SongDetailsCache.SongDetails.Init());
 				}
 			}
-			return songDetails;
+			catch
+			{
+				// ignored
+			}
+			finally
+			{
+				FinishedInitAttempt = true;
+			}
+			
+			return SongDetails;
 		}
 	}
 }

@@ -11,15 +11,15 @@ namespace BetterSongList.Util {
 				.GroupBy(x => x.Key.ToUpperInvariant())
 				.ToArray();
 
-			var amt = Math.Min(valueLimit, x.Length);
+			int amt = Math.Min(valueLimit, x.Length);
 
 			if(amt <= 1)
 				yield break;
 
-			for(var i = 0; i < amt; i++) {
-				var bmi = (int)Math.Round(((float)(x.Length - 1) / (amt - 1)) * i);
+			for(int i = 0; i < amt; i++) {
+				int bmi = (int)Math.Round(((float)(x.Length - 1) / (amt - 1)) * i);
 
-				var transformedResult = x[bmi].Key;
+				string transformedResult = x[bmi].Key;
 
 				if(transformedResult.Length > entryLengthLimit)
 					transformedResult = transformedResult.Substring(0, entryLengthLimit);

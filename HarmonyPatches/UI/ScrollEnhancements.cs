@@ -4,15 +4,18 @@ using HMUI;
 using System;
 using System.Collections;
 using System.Linq;
-using System.Reflection;
+using JetBrains.Annotations;
 using UnityEngine;
 using UnityEngine.Events;
+using Object = UnityEngine.Object;
 
 namespace BetterSongList.HarmonyPatches.UI {
 	[HarmonyPatch(typeof(LevelCollectionTableView), nameof(LevelCollectionTableView.Init), new Type[] { })]
-	static class ScrollEnhancements {
-		static GameObject[] buttons = null;
-		static void Prefix(LevelCollectionTableView __instance) {
+	internal static class ScrollEnhancements {
+		private static GameObject[] _buttons;
+		// ReSharper disable once InconsistentNaming
+		[UsedImplicitly]
+		private static void Prefix(LevelCollectionTableView __instance) {
 			if(!__instance._isInitialized)
 				SharedCoroutineStarter.instance.StartCoroutine(DoTheFunny(__instance._tableView, __instance.transform));
 
@@ -20,11 +23,11 @@ namespace BetterSongList.HarmonyPatches.UI {
 		}
 
 		public static void UpdateState() {
-			buttons?.Do(x => { if(x != null) x.SetActive(Config.Instance.ExtendSongsScrollbar); });
+			_buttons?.Do(x => { if(x != null) x.SetActive(Config.Instance.ExtendSongsScrollbar); });
 		}
 
-		static Transform BuildButton(Transform baseButton, string Icon, float vOffs, float rotation, UnityAction cb) {
-			var newBtn = GameObject.Instantiate(baseButton,
+		private static Transform BuildButton(Transform baseButton, string icon, float vOffs, float rotation, UnityAction cb) {
+			var newBtn = Object.Instantiate(baseButton,
 				baseButton
 				.parent // ScrollBar
 				.parent // LevelsTableView
@@ -37,8 +40,8 @@ namespace BetterSongList.HarmonyPatches.UI {
 			r.anchorMax = new Vector2(1, 0.953f - vOffs);
 
 			var i = newBtn.GetComponentInChildren<ImageView>();
-			if(Icon?[0] == '#')
-				i.SetImageAsync(Icon);
+			if(icon?[0] == '#')
+				i.SetImageAsync(icon);
 
 			// Put the Icon in the middle of the touchable rect
 			r = (RectTransform)i.transform;
@@ -54,7 +57,7 @@ namespace BetterSongList.HarmonyPatches.UI {
 			return newBtn;
 		}
 
-		static IEnumerator DoTheFunny(TableView table, Transform a) {
+		private static IEnumerator DoTheFunny(TableView table, Transform a) {
 			//yield return new WaitForSeconds(2f);
 			yield return new WaitForEndOfFrame();
 
@@ -77,7 +80,7 @@ namespace BetterSongList.HarmonyPatches.UI {
 
 				var amt = cells * step * direction;
 
-				if(step != 1)
+				if(!Mathf.Approximately(step, 1))
 					amt += table.GetVisibleCellsIdRange().Item1;
 
 				table.ScrollToCellWithIdx((int)amt, TableView.ScrollPositionType.Beginning, true);
@@ -87,7 +90,7 @@ namespace BetterSongList.HarmonyPatches.UI {
 			var btnUpFast = BuildButton(buton, null, 0, -90, () => Scroll(0.1f, -1));
 			var btnDownFast = BuildButton(buton, null, 0.86f, 90, () => Scroll(0.1f, 1));
 
-			buttons = new[] {
+			_buttons = new[] {
 				btnUpFast,
 				BuildButton(buton, "#HeightIcon", 0.30f, 0, () => Scroll(1, 0)),
 				BuildButton(buton, "#HeightIcon", 0.56f, 180, () => Scroll(1, 1)),

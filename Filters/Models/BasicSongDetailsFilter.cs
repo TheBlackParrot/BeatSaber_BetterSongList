@@ -6,7 +6,7 @@ using System.Threading.Tasks;
 
 namespace BetterSongList.FilterModels {
 	public class BasicSongDetailsFilter : IFilter, IAvailabilityCheck {
-		public bool isReady => SongDetailsUtil.finishedInitAttempt;
+		public bool isReady => SongDetailsUtil.FinishedInitAttempt;
 
 		Func<object, bool> filterValueTransformer;
 
@@ -24,7 +24,7 @@ namespace BetterSongList.FilterModels {
 		public string GetUnavailabilityReason() => SongDetailsUtil.GetUnavailabilityReason();
 
 		public bool GetValueFor(BeatmapLevel level) {
-			if(SongDetailsUtil.songDetails == null)
+			if(SongDetailsUtil.SongDetails == null)
 				return false;
 
 			//if(!GetSongFromBeatmap(level, out var song))
@@ -35,7 +35,7 @@ namespace BetterSongList.FilterModels {
 				return false;
 
 			bool wrapper() {
-				if(!SongDetailsUtil.songDetails.instance.songs.FindByHash(h, out var song))
+				if(!SongDetailsUtil.SongDetails.Instance.songs.FindByHash(h, out var song))
 					return false;
 
 				return filterValueTransformer(song);

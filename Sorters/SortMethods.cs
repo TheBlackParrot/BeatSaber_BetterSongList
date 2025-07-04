@@ -1,27 +1,26 @@
-﻿using BetterSongList.Interfaces;
-using BetterSongList.SortModels;
-using BetterSongList.Util;
-using SongDetailsCache.Structs;
-using System;
+﻿using System;
 using System.Collections.Generic;
 using System.Globalization;
-using System.Linq;
-using HarmonyLib;
+using BetterSongList.Interfaces;
+using BetterSongList.SortModels;
 using BetterSongList.UI;
+using BetterSongList.Util;
+using JetBrains.Annotations;
+using SongDetailsCache.Structs;
 
 namespace BetterSongList {
 	public static class SortMethods {
-		public static readonly ISorter alphabeticalSongname = new ComparableFunctionSorterWithLegend(
+		public static readonly ISorter alphabeticalSongName = new ComparableFunctionSorterWithLegend(
 			(songa, songb) => string.Compare(songa.songName, songb.songName, StringComparison.Ordinal),
 			song => song.songName.Length > 0 ? song.songName.Substring(0, 1) : null
 		);
 
 		public static readonly ISorter bpm = new PrimitiveFunctionSorterWithLegend(
 			song => song.beatsPerMinute,
-			song => Math.Round(song.beatsPerMinute).ToString()
+			song => Math.Round(song.beatsPerMinute).ToString(CultureInfo.InvariantCulture)
 		);
 
-		public static readonly ISorter alphabeticalMapper = new ComparableFunctionSorterWithLegend(
+		[UsedImplicitly] public static readonly ISorter alphabeticalMapper = new ComparableFunctionSorterWithLegend(
 			(songa, songb) => string.Compare(
 				BeatmapsUtil.ConcatMappers(songa.allMappers),
 				BeatmapsUtil.ConcatMappers(songb.allMappers), 
@@ -41,8 +40,8 @@ namespace BetterSongList {
 
 			float ret = 0;
 
-			for(var i = (int)x.diffOffset; i < x.diffOffset + x.diffCount; i++) {
-				var diff = SongDetailsUtil.songDetails.instance.difficulties[i];
+			for(int i = (int)x.diffOffset; i < x.diffOffset + x.diffCount; i++) {
+				var diff = SongDetailsUtil.SongDetails.Instance.difficulties[i];
 
 				if(diff.stars == 0)
 					continue;
@@ -66,30 +65,20 @@ namespace BetterSongList {
 		}
 
 		public static readonly ISorter stars = new BasicSongDetailsSorterWithLegend(StarsProcessor, x => {
-			var y = StarsProcessor((Song)x);
-
-			if(y == null)
-				return null;
-
-			return ((float)y).ToString("0.0");
+			float? y = StarsProcessor((Song)x);
+			return y?.ToString("0.0");
 		});
 
-		const float funnyOptim = 1 / 60f;
+		private const float FunnyOptim = 1 / 60f;
+
 		public static readonly ISorter songLength = new PrimitiveFunctionSorterWithLegend(
 			song => song.songDuration,
-			song => (song.songDuration < 60 ? "<1" : Math.Round(song.songDuration * funnyOptim).ToString()) + " min"
+			song => (song.songDuration < 60
+				? "<1"
+				: Math.Round(song.songDuration * FunnyOptim).ToString(CultureInfo.InvariantCulture)) + " min"
 		);
 
-		static int GetQuarter(DateTime date) {
-			if(date.Month > 9)
-				return 4;
-			else if(date.Month > 6)
-				return 3;
-			else if(date.Month > 3)
-				return 2;
-
-			return 1;
-		}
+		private static int GetQuarter(DateTime date) => date.Month > 9 ? 4 : date.Month > 6 ? 3 : date.Month > 3 ? 2 : 1;
 
 		public static readonly ISorter beatSaverDate = new BasicSongDetailsSorterWithLegend(
 			x => ((Song)x).uploadTimeUnix,
@@ -99,8 +88,8 @@ namespace BetterSongList {
 		});
 
 
-		internal static Dictionary<string, ISorter> methods = new Dictionary<string, ISorter>() {
-			{ "Song Name", alphabeticalSongname },
+		internal static Dictionary<string, ISorter> methods = new Dictionary<string, ISorter> {
+			{ "Song Name", alphabeticalSongName },
 			{ "Download Date", downloadTime },
 			{ "SS Stars", stars },
 			{ "Song Length", songLength },
@@ -109,8 +98,8 @@ namespace BetterSongList {
 			{ "Default", null }
 		};
 
-		static bool Register(ITransformerPlugin sorter) {
-			var name = sorter.name;
+		public static bool Register(ITransformerPlugin sorter) {
+			string name = sorter.name;
 
 			if(name.Length > 20)
 				throw new ArgumentException("The name of the Transformer cannot exceed 20 Characters");

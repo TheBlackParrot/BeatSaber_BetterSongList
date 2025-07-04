@@ -7,7 +7,7 @@ using System.Threading.Tasks;
 
 namespace BetterSongList.SortModels {
 	public class BasicSongDetailsSorterWithLegend : ISorterWithLegend, ISorterPrimitive, IAvailabilityCheck {
-		public bool isReady => SongDetailsUtil.finishedInitAttempt;
+		public bool isReady => SongDetailsUtil.FinishedInitAttempt;
 
 #nullable enable
 		Func<object, float?> sortValueTransformer;
@@ -24,7 +24,7 @@ namespace BetterSongList.SortModels {
 		}
 
 		public IEnumerable<KeyValuePair<string, int>> BuildLegend(BeatmapLevel[] levels) {
-			if(SongDetailsUtil.songDetails == null)
+			if(SongDetailsUtil.SongDetails == null)
 				return null;
 
 			try {
@@ -33,7 +33,7 @@ namespace BetterSongList.SortModels {
 					//	return null;
 
 					var h = BeatmapsUtil.GetHashOfLevel(level);
-					if(h == null || !SongDetailsUtil.songDetails.instance.songs.FindByHash(h, out var song))
+					if(h == null || !SongDetailsUtil.SongDetails.Instance.songs.FindByHash(h, out var song))
 						return "N/A";
 
 					return legendValueTransformer(song);
@@ -47,12 +47,12 @@ namespace BetterSongList.SortModels {
 
 		public float? GetValueFor(BeatmapLevel x) {
 			// Make N/A always end up at the bottom in either sort direction
-			if(SongDetailsUtil.songDetails == null)
+			if(SongDetailsUtil.SongDetails == null)
 				return null;
 
 			float? _Get(BeatmapLevel x) {
 				var h = BeatmapsUtil.GetHashOfLevel(x);
-				if(h == null || !SongDetailsUtil.songDetails.instance.songs.FindByHash(h, out var song))
+				if(h == null || !SongDetailsUtil.SongDetails.Instance.songs.FindByHash(h, out var song))
 					return null;
 
 				return sortValueTransformer(song);

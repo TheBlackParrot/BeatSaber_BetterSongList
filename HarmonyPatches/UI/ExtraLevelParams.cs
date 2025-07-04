@@ -4,157 +4,215 @@ using HarmonyLib;
 using HMUI;
 using System;
 using System.Collections;
+using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using IPA.Utilities;
+using JetBrains.Annotations;
 using TMPro;
 using UnityEngine;
-using System.Reflection;
+using Object = UnityEngine.Object;
 
-namespace BetterSongList.HarmonyPatches.UI {
+namespace BetterSongList.HarmonyPatches.UI
+{
 	[HarmonyPatch(typeof(StandardLevelDetailView), nameof(StandardLevelDetailView.RefreshContent))]
-	static class ExtraLevelParams {
-		static GameObject extraUI = null;
-		static TextMeshProUGUI[] fields = null;
+	internal static class ExtraLevelParams
+	{
+		private static GameObject _extraUI;
+		private static TextMeshProUGUI[] _fields;
 
-		static HoverHintController hhc = null;
-		static Sprite favIcon = null;
-		static IEnumerator ProcessFields() {
+		private static HoverHintController _hhc;
+		private static Sprite _favIcon;
+
+		private static void ModifyValue(TextMeshProUGUI text, string hoverHint, string iconName)
+		{
+			var icon = text.transform.parent.Find("Icon").GetComponent<ImageView>();
+
+			if(iconName == "Favorites")
+			{
+				if(_favIcon)
+				{
+					icon.sprite = _favIcon;
+				}
+				else
+				{
+					Utilities.LoadSpriteFromAssemblyAsync("BetterSongList.UI.FavoritesIcon.png").ContinueWith(x => {
+						icon.sprite = _favIcon = x.Result;
+					});
+					icon.color = new Color32(255, 192, 64, 255);
+				}
+			}
+			else
+			{
+				icon.SetImageAsync($"#{iconName}Icon");
+			}
+
+			Object.DestroyImmediate(text.GetComponentInParent<LocalizedHoverHint>());
+			var hhint = text.GetComponentInParent<HoverHint>();
+
+			if (!hhint)
+			{
+				return;
+			}
+
+			if (!_hhc)
+			{
+				_hhc = Object.FindObjectOfType<HoverHintController>();
+			}
+
+			// Normally zenjected, not here obviously. I dont think the Controller is ever destroyed so we dont need to explicit null check
+			hhint.SetField("_hoverHintController", _hhc);
+			hhint.text = hoverHint;
+		}
+
+		private static IEnumerator ProcessFields()
+		{
 			//Need to wait until the end of frame for reasons beyond my understanding
 			yield return new WaitForEndOfFrame();
 
-			static void ModifyValue(TextMeshProUGUI text, string hoverHint, string iconName) {
-				var icon = text.transform.parent.Find("Icon").GetComponent<ImageView>();
+			ModifyValue(_fields[0], "Star Rating", "Favorites");
+			ModifyValue(_fields[1], "Jump Speed", "FastNotes");
+			ModifyValue(_fields[2], "Reaction Time", "Clock");
+			ModifyValue(_fields[3], "Map Upload Date", "Height");
 
-				if(iconName == "Favorites") {
-					if(favIcon != null) {
-						icon.sprite = favIcon;
-					} else {
-						Utilities.LoadSpriteFromAssemblyAsync("BetterSongList.UI.FavoritesIcon.png").ContinueWith(x => {
-							icon.sprite = favIcon = x.Result;
-						});
-						icon.color = new Color32(255, 192, 64, 255);
-					}
-				} else {
-					icon.SetImageAsync($"#{iconName}Icon");
-				}
-
-				GameObject.DestroyImmediate(text.GetComponentInParent<LocalizedHoverHint>());
-				var hhint = text.GetComponentInParent<HoverHint>();
-
-				if(hhint == null)
-					return;
-
-				if(hhc == null)
-					hhc = UnityEngine.Object.FindObjectOfType<HoverHintController>();
-
-				// Normally zenjected, not here obviously. I dont think the Controller is ever destroyed so we dont need to explicit null check
-				ReflectionUtil.SetField(hhint, "_hoverHintController", hhc);
-				hhint.text = hoverHint;
-			}
-
-			ModifyValue(fields[0], "Star Rating", "Favorites");
-			ModifyValue(fields[1], "Jump Speed", "FastNotes");
-			ModifyValue(fields[2], "Reaction Time", "Clock");
-			ModifyValue(fields[3], "Map Upload Date", "Height");
-			
-			foreach (var field in fields)
+			foreach (var field in _fields)
 			{
 				field.richText = true;
 			}
 		}
 
-		static StandardLevelDetailView lastInstance = null;
+		private static StandardLevelDetailView _lastInstance;
 
-		public static void UpdateState() {
-			if(lastInstance != null && lastInstance.isActiveAndEnabled)
-				lastInstance.RefreshContent();
+		public static void UpdateState()
+		{
+			if (_lastInstance && _lastInstance.isActiveAndEnabled)
+			{
+				_lastInstance.RefreshContent();
+			}
 		}
 		
+		private static void Wrapper(StandardLevelDetailView standardLevelDetailView, BeatmapKey beatmapKey)
+		{
+			// For now we can assume non-standard diff is unranked. Probably not changing any time soon i guess
+			var ch = (SongDetailsCache.Structs.MapCharacteristic)BeatmapsUtil.GetCharacteristicFromDifficulty(beatmapKey);
+
+			if (ch != SongDetailsCache.Structs.MapCharacteristic.Standard)
+			{
+				_fields[0].text = "-";
+			}
+			else
+			{
+				var mh = BeatmapsUtil.GetHashOfLevel(standardLevelDetailView._beatmapLevel);
+
+				if (mh == null ||
+				   !SongDetailsUtil.SongDetails.Instance.songs.FindByHash(mh, out var song) ||
+				   !song.GetDifficulty(
+					   out var diff,
+					   (SongDetailsCache.Structs.MapDifficulty)beatmapKey.difficulty,
+					   ch
+				   ))
+				{
+					_fields[0].text = _fields[3].text = "-";
+					return;
+				}
+
+				var isSs = Config.Instance.PreferredLeaderboard == "ScoreSaber";
+				float stars = isSs ? diff.stars : diff.starsBeatleader;
+
+				if(stars > 0)
+				{
+					string[] starsRaw = stars.ToString("0.00").Split('.');
+					_fields[0].text = starsRaw[0] + "<size=85%>." + starsRaw[1];
+				}
+				else
+				{
+					_fields[0].text = "-";
+				}
+
+				var uploadTime = DateTimeOffset.FromUnixTimeSeconds((int)song.uploadTimeUnix);
+				_fields[3].text = ((MonthNames)uploadTime.Month - 1) + " " + uploadTime.Year.ToString().Substring(2, 2);
+			}
+		}
+		
+		[SuppressMessage("ReSharper", "UnusedMember.Local")]
 		private enum MonthNames { Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec }
 
-		static void Postfix(StandardLevelDetailView __instance) {
-			if(extraUI == null) {
+		[UsedImplicitly]
+		// ReSharper disable once InconsistentNaming
+		private static void Postfix(StandardLevelDetailView __instance)
+		{
+			if(!_extraUI)
+			{
 				// I wanted to make a custom UI for this with bsml first... But this is MUCH easier and probably looks better
-				extraUI = GameObject.Instantiate(__instance._levelParamsPanel, __instance._levelParamsPanel.transform.parent).gameObject;
-				extraUI.GetComponentInChildren<CanvasGroup>().alpha = 1;
+				_extraUI = Object.Instantiate(__instance._levelParamsPanel, __instance._levelParamsPanel.transform.parent).gameObject;
+				_extraUI.GetComponentInChildren<CanvasGroup>().alpha = 1;
 
-				GameObject.Destroy(extraUI.GetComponent<LevelParamsPanel>());
+				Object.Destroy(_extraUI.GetComponent<LevelParamsPanel>());
 
 				__instance._levelParamsPanel.transform.localPosition += new Vector3(0, 3.5f);
-				extraUI.transform.localPosition -= new Vector3(0, 1f);
+				_extraUI.transform.localPosition -= new Vector3(0, 1f);
+				
+				for(int i = 1; i < __instance._levelParamsPanel.transform.childCount; i++)
+				{
+					Vector3 oldPos = __instance._levelParamsPanel.transform.GetChild(i).localPosition;
+					__instance._levelParamsPanel.transform.GetChild(i).localPosition = new Vector3(i * 16f, oldPos.y, oldPos.z);
+					
+					oldPos = _extraUI.transform.GetChild(i).localPosition;
+					_extraUI.transform.GetChild(i).localPosition = new Vector3(i * 16f, oldPos.y, oldPos.z);
+				}
 
-				fields = extraUI.GetComponentsInChildren<CurvedTextMeshPro>();
+				_fields = _extraUI.GetComponentsInChildren<TextMeshProUGUI>();
 				SharedCoroutineStarter.instance.StartCoroutine(ProcessFields());
 			}
 
-			lastInstance = __instance;
+			_lastInstance = __instance;
 
-			if(fields != null) {
-				var beatmapKey = __instance.beatmapKey;
+			if(_fields == null)
+			{
+				return;
+			}
+			
+			var beatmapKey = __instance.beatmapKey;
 
-				if(!SongDetailsUtil.isAvailable) {
-					fields[0].text = "N/A";
-				} else if(SongDetailsUtil.songDetails != null) {
-					void wrapper() {
-						// For now we can assume non-standard diff is unranked. Probably not changing any time soon i guess
-						var ch = (SongDetailsCache.Structs.MapCharacteristic)BeatmapsUtil.GetCharacteristicFromDifficulty(beatmapKey);
-
-						if(ch != SongDetailsCache.Structs.MapCharacteristic.Standard) {
-							fields[0].text = "-";
-						} else {
-							var mh = BeatmapsUtil.GetHashOfLevel(__instance._beatmapLevel);
-
-							if(mh == null ||
-								!SongDetailsUtil.songDetails.instance.songs.FindByHash(mh, out var song) ||
-								!song.GetDifficulty(
-									out var diff,
-									(SongDetailsCache.Structs.MapDifficulty)beatmapKey.difficulty,
-									ch
-								)
-							) {
-								fields[0].text = fields[3].text = "-";
-								return;
-							} else {
-								var isSs = Config.Instance.PreferredLeaderboard == "ScoreSaber";
-								float stars = isSs ? diff.stars : diff.starsBeatleader;
-
-								if(stars > 0) {
-									string[] starsRaw = stars.ToString("0.00").Split('.');
-									fields[0].text = starsRaw[0] + "<size=85%>." + starsRaw[1];
-								} else {
-									fields[0].text = "-";
-								}
-							}
-							
-							var uploadTime = DateTimeOffset.FromUnixTimeSeconds((int)song.uploadTimeUnix);
-							fields[3].text = ((MonthNames)uploadTime.Month - 1) + " " + uploadTime.Year.ToString().Substring(2, 2);
-						}
-					}
-					wrapper();
+			if(!SongDetailsUtil.IsAvailable)
+			{
+				_fields[0].text = "N/A";
+			}
+			else if(SongDetailsUtil.SongDetails != null)
+			{
+				Wrapper(__instance, beatmapKey);
 				// This might end up Double-Initing SongDetails but SongDetails handles that internally and only does it once so whatever
-				} else if(!SongDetailsUtil.finishedInitAttempt) {
-					SongDetailsUtil.TryGet().ContinueWith(
-						x => { if(x.Result != null) UpdateState(); },
-						CancellationToken.None, TaskContinuationOptions.OnlyOnRanToCompletion, TaskScheduler.FromCurrentSynchronizationContext()
-					);
-				}
+			}
+			else if(!SongDetailsUtil.FinishedInitAttempt)
+			{
+				SongDetailsUtil.TryGet().ContinueWith(
+					x => { if(x.Result != null) UpdateState(); },
+					CancellationToken.None, TaskContinuationOptions.OnlyOnRanToCompletion,
+					TaskScheduler.FromCurrentSynchronizationContext()
+				);
+			}
 
-				// Basegame maps have no NJS or JD
-				var basicData = __instance._beatmapLevel.GetDifficultyBeatmapData(beatmapKey.beatmapCharacteristic, beatmapKey.difficulty);
-				float njs = basicData?.noteJumpMovementSpeed ?? 0;
-				if(njs == 0)
-					njs = beatmapKey.difficulty.DefaultNoteJumpMovementSpeed();
-				float rt = JumpDistanceCalculator.GetRt(__instance._beatmapLevel.beatsPerMinute, njs, basicData?.noteJumpStartBeatOffset ?? 0);
+			// Basegame maps have no NJS or JD
+			var basicData = __instance._beatmapLevel.GetDifficultyBeatmapData(beatmapKey.beatmapCharacteristic, beatmapKey.difficulty);
+			
+			float njs = basicData?.noteJumpMovementSpeed ?? 0;
+			if (njs == 0)
+			{
+				njs = beatmapKey.difficulty.DefaultNoteJumpMovementSpeed();
+			}
+			
+			float rt = JumpDistanceCalculator.GetRt(__instance._beatmapLevel.beatsPerMinute, njs, basicData?.noteJumpStartBeatOffset ?? 0);
 				
-				string[] njsRaw = njs.ToString("0.##").Split('.');
-				fields[1].text = (njsRaw.Length == 1 ? njsRaw[0] : njsRaw[0] + "<size=80%>." + njsRaw[1]) + "<size=65%> NJS";
+			string[] njsRaw = njs.ToString("0.##").Split('.');
+			_fields[1].text = (njsRaw.Length == 1 ? njsRaw[0] : njsRaw[0] + "<size=80%>." + njsRaw[1]) + "<size=65%> NJS";
 
-				if(rt < 1000) {
-					fields[2].text = rt.ToString("0") + "<size=65%> MS";
-				} else {
-					fields[2].text = (rt/1000).ToString("0.#") + "<size=65%> S";
-				}
+			if (rt < 1000)
+			{
+				_fields[2].text = rt.ToString("0") + "<size=65%> MS";
+			}
+			else
+			{
+				_fields[2].text = (rt / 1000).ToString("0.#") + "<size=65%> S";
 			}
 		}
 	}

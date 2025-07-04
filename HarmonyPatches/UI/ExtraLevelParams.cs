@@ -9,6 +9,7 @@ using System.Threading.Tasks;
 using IPA.Utilities;
 using JetBrains.Annotations;
 using TMPro;
+using Tweening;
 using UnityEngine;
 using Object = UnityEngine.Object;
 
@@ -44,8 +45,6 @@ namespace BetterSongList.HarmonyPatches.UI
 			{
 				icon.SetImageAsync($"#{iconName}Icon");
 			}
-			
-			icon.color = new Color(1, 1, 1, 0.5f);
 
 			Object.DestroyImmediate(text.GetComponentInParent<LocalizedHoverHint>());
 			var hhint = text.GetComponentInParent<HoverHint>();
@@ -77,7 +76,6 @@ namespace BetterSongList.HarmonyPatches.UI
 
 			foreach (var field in _fields)
 			{
-				field.color = Color.white;
 				field.richText = true;
 			}
 		}
@@ -139,7 +137,15 @@ namespace BetterSongList.HarmonyPatches.UI
 		private enum MonthNames { Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec }
 		// ReSharper restore UnusedMember.Local
 		
-		private static readonly Color TransparentWhite = new Color(1, 1, 1, 0.5f);
+		private static readonly Color TransparentWhite = new Color(1, 1, 1, 0.75f);
+
+		private static CanvasGroup _extraParamsCanvasGroup;
+		private static CanvasGroup _baseGameParamsCanvasGroup;
+		private static void FadeInParams(float f)
+		{
+			_extraParamsCanvasGroup.alpha = f;
+			_baseGameParamsCanvasGroup.alpha = f;
+		}
 
 		[UsedImplicitly]
 		// ReSharper disable once InconsistentNaming
@@ -147,9 +153,20 @@ namespace BetterSongList.HarmonyPatches.UI
 		{
 			if(!_extraUI)
 			{
+				_baseGameParamsCanvasGroup = __instance._levelParamsPanel.GetComponentInChildren<CanvasGroup>();
+				
+				__instance._levelParamsPanel._bombsCountText.color = Color.white;
+				__instance._levelParamsPanel._bombsCountText.transform.parent.Find("Icon").GetComponent<ImageView>().color = TransparentWhite;
+				__instance._levelParamsPanel._notesCountText.color = Color.white;
+				__instance._levelParamsPanel._notesCountText.transform.parent.Find("Icon").GetComponent<ImageView>().color = TransparentWhite;
+				__instance._levelParamsPanel._obstaclesCountText.color = Color.white;
+				__instance._levelParamsPanel._obstaclesCountText.transform.parent.Find("Icon").GetComponent<ImageView>().color = TransparentWhite;
+				__instance._levelParamsPanel._notesPerSecondText.color = Color.white;
+				__instance._levelParamsPanel._notesPerSecondText.transform.parent.Find("Icon").GetComponent<ImageView>().color = TransparentWhite;
+				
 				// I wanted to make a custom UI for this with bsml first... But this is MUCH easier and probably looks better
 				_extraUI = Object.Instantiate(__instance._levelParamsPanel, __instance._levelParamsPanel.transform.parent).gameObject;
-				_extraUI.GetComponentInChildren<CanvasGroup>().alpha = 1;
+				_extraParamsCanvasGroup = _extraUI.GetComponentInChildren<CanvasGroup>();
 
 				Object.Destroy(_extraUI.GetComponent<LevelParamsPanel>());
 
@@ -178,16 +195,10 @@ namespace BetterSongList.HarmonyPatches.UI
 					panelBgRectTransform.offsetMax = new Vector2(-2f, -15.5f);
 				}
 				
-				__instance._levelParamsPanel._bombsCountText.color = Color.white;
-				__instance._levelParamsPanel._bombsCountText.transform.parent.Find("Icon").GetComponent<ImageView>().color = TransparentWhite;
-				__instance._levelParamsPanel._notesCountText.color = Color.white;
-				__instance._levelParamsPanel._notesCountText.transform.parent.Find("Icon").GetComponent<ImageView>().color = TransparentWhite;
-				__instance._levelParamsPanel._obstaclesCountText.color = Color.white;
-				__instance._levelParamsPanel._obstaclesCountText.transform.parent.Find("Icon").GetComponent<ImageView>().color = TransparentWhite;
-				__instance._levelParamsPanel._notesPerSecondText.color = Color.white;
-				__instance._levelParamsPanel._notesPerSecondText.transform.parent.Find("Icon").GetComponent<ImageView>().color = TransparentWhite;
+				__instance._levelParamsPanelCanvasGroupTween = new FloatTween(0.0f, 1f, FadeInParams, 0.15f, EaseType.InSine);
 			}
 
+			_extraParamsCanvasGroup.alpha = 0;
 			_lastInstance = __instance;
 
 			if(_fields == null)

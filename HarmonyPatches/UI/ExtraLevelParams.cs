@@ -38,13 +38,14 @@ namespace BetterSongList.HarmonyPatches.UI
 					Utilities.LoadSpriteFromAssemblyAsync("BetterSongList.UI.FavoritesIcon.png").ContinueWith(x => {
 						icon.sprite = _favIcon = x.Result;
 					});
-					icon.color = new Color32(255, 192, 64, 255);
 				}
 			}
 			else
 			{
 				icon.SetImageAsync($"#{iconName}Icon");
 			}
+			
+			icon.color = new Color(1, 1, 1, 0.5f);
 
 			Object.DestroyImmediate(text.GetComponentInParent<LocalizedHoverHint>());
 			var hhint = text.GetComponentInParent<HoverHint>();
@@ -76,6 +77,7 @@ namespace BetterSongList.HarmonyPatches.UI
 
 			foreach (var field in _fields)
 			{
+				field.color = Color.white;
 				field.richText = true;
 			}
 		}
@@ -136,6 +138,8 @@ namespace BetterSongList.HarmonyPatches.UI
 		// ReSharper disable UnusedMember.Local
 		private enum MonthNames { Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec }
 		// ReSharper restore UnusedMember.Local
+		
+		private static readonly Color TransparentWhite = new Color(1, 1, 1, 0.5f);
 
 		[UsedImplicitly]
 		// ReSharper disable once InconsistentNaming
@@ -149,8 +153,8 @@ namespace BetterSongList.HarmonyPatches.UI
 
 				Object.Destroy(_extraUI.GetComponent<LevelParamsPanel>());
 
-				__instance._levelParamsPanel.transform.localPosition += new Vector3(0, 3.5f);
-				_extraUI.transform.localPosition -= new Vector3(0, 1f);
+				__instance._levelParamsPanel.transform.localPosition += new Vector3(0, 4f);
+				//_extraUI.transform.localPosition += new Vector3(0, 1f);
 				
 				for(int i = 1; i < __instance._levelParamsPanel.transform.childCount; i++)
 				{
@@ -163,6 +167,25 @@ namespace BetterSongList.HarmonyPatches.UI
 
 				_fields = _extraUI.GetComponentsInChildren<TextMeshProUGUI>();
 				SharedCoroutineStarter.instance.StartCoroutine(ProcessFields());
+
+				GameObject panelBg = Object.Instantiate(__instance.transform.Find("BeatmapCharacteristic/BG"), __instance.transform).gameObject;
+				panelBg.name = "LevelParamsBackground";
+				panelBg.transform.SetSiblingIndex(0);
+
+				if (panelBg.TryGetComponent(out RectTransform panelBgRectTransform))
+				{
+					panelBgRectTransform.offsetMin = new Vector2(2f, 29.5f);
+					panelBgRectTransform.offsetMax = new Vector2(-2f, -15.5f);
+				}
+				
+				__instance._levelParamsPanel._bombsCountText.color = Color.white;
+				__instance._levelParamsPanel._bombsCountText.transform.parent.Find("Icon").GetComponent<ImageView>().color = TransparentWhite;
+				__instance._levelParamsPanel._notesCountText.color = Color.white;
+				__instance._levelParamsPanel._notesCountText.transform.parent.Find("Icon").GetComponent<ImageView>().color = TransparentWhite;
+				__instance._levelParamsPanel._obstaclesCountText.color = Color.white;
+				__instance._levelParamsPanel._obstaclesCountText.transform.parent.Find("Icon").GetComponent<ImageView>().color = TransparentWhite;
+				__instance._levelParamsPanel._notesPerSecondText.color = Color.white;
+				__instance._levelParamsPanel._notesPerSecondText.transform.parent.Find("Icon").GetComponent<ImageView>().color = TransparentWhite;
 			}
 
 			_lastInstance = __instance;

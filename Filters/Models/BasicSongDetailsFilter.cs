@@ -14,11 +14,9 @@ namespace BetterSongList.FilterModels {
 			this.filterValueTransformer = filterValueTransformer;
 		}
 
-		public Task Prepare(CancellationToken cancelToken) {
-			if(!isReady)
-				return SongDetailsUtil.TryGet();
-
-			return Task.CompletedTask;
+		public Task Prepare(CancellationToken cancelToken)
+		{
+			return !isReady ? SongDetailsUtil.TryGet() : Task.CompletedTask;
 		}
 
 		public string GetUnavailabilityReason() => SongDetailsUtil.GetUnavailabilityReason();

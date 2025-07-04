@@ -28,7 +28,7 @@ namespace BetterSongList.FilterModels {
 				return false;
 
 			return SongCore.Collections.GetCustomLevelSongData(mid)?
-				._difficulties?.Any(x => x.additionalDifficultyData._requirements.Any(y => y.Length != 0)) == true;
+				._difficulties.Any(x => x.additionalDifficultyData._requirements.Any(y => y.Length != 0)) == true;
 		}
 	}
 }

@@ -4,7 +4,6 @@ using HarmonyLib;
 using HMUI;
 using System;
 using System.Collections;
-using System.Diagnostics.CodeAnalysis;
 using System.Threading;
 using System.Threading.Tasks;
 using IPA.Utilities;
@@ -115,14 +114,13 @@ namespace BetterSongList.HarmonyPatches.UI
 					_fields[0].text = _fields[3].text = "-";
 					return;
 				}
-
-				var isSs = Config.Instance.PreferredLeaderboard == "ScoreSaber";
-				float stars = isSs ? diff.stars : diff.starsBeatleader;
+				
+				float stars = Config.Instance.PreferredLeaderboard == "ScoreSaber" ? diff.stars : diff.starsBeatleader;
 
 				if(stars > 0)
 				{
 					string[] starsRaw = stars.ToString("0.00").Split('.');
-					_fields[0].text = starsRaw[0] + "<size=85%>." + starsRaw[1];
+					_fields[0].text = $"{starsRaw[0]}<size=85%>.{starsRaw[1]}";
 				}
 				else
 				{
@@ -130,12 +128,14 @@ namespace BetterSongList.HarmonyPatches.UI
 				}
 
 				var uploadTime = DateTimeOffset.FromUnixTimeSeconds((int)song.uploadTimeUnix);
-				_fields[3].text = ((MonthNames)uploadTime.Month - 1) + " " + uploadTime.Year.ToString().Substring(2, 2);
+				_fields[3].text = $"{(MonthNames)uploadTime.Month - 1} {uploadTime.Year.ToString().Substring(2, 2)}";
 			}
 		}
 		
-		[SuppressMessage("ReSharper", "UnusedMember.Local")]
+
+		// ReSharper disable UnusedMember.Local
 		private enum MonthNames { Jan, Feb, Mar, Apr, May, Jun, Jul, Aug, Sep, Oct, Nov, Dec }
+		// ReSharper restore UnusedMember.Local
 
 		[UsedImplicitly]
 		// ReSharper disable once InconsistentNaming
@@ -195,7 +195,7 @@ namespace BetterSongList.HarmonyPatches.UI
 			// Basegame maps have no NJS or JD
 			var basicData = __instance._beatmapLevel.GetDifficultyBeatmapData(beatmapKey.beatmapCharacteristic, beatmapKey.difficulty);
 			
-			float njs = basicData?.noteJumpMovementSpeed ?? 0;
+			float njs = basicData?.noteJumpMovementSpeed ?? beatmapKey.difficulty.DefaultNoteJumpMovementSpeed();
 			if (njs == 0)
 			{
 				njs = beatmapKey.difficulty.DefaultNoteJumpMovementSpeed();
@@ -206,14 +206,7 @@ namespace BetterSongList.HarmonyPatches.UI
 			string[] njsRaw = njs.ToString("0.##").Split('.');
 			_fields[1].text = (njsRaw.Length == 1 ? njsRaw[0] : njsRaw[0] + "<size=80%>." + njsRaw[1]) + "<size=65%> NJS";
 
-			if (rt < 1000)
-			{
-				_fields[2].text = rt.ToString("0") + "<size=65%> MS";
-			}
-			else
-			{
-				_fields[2].text = (rt / 1000).ToString("0.#") + "<size=65%> S";
-			}
+			_fields[2].text = rt < 1000 ? $"{rt:0}<size=65%> MS" : $"{rt / 1000:0.#}<size=65%> S";
 		}
 	}
 }

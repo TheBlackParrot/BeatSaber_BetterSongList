@@ -160,7 +160,8 @@ namespace BetterSongList.HarmonyPatches.UI
 		// ReSharper restore UnusedMember.Local
 		
 		private static readonly Color TransparentWhite = new Color(1, 1, 1, 0.75f);
-		private static readonly Color TransparentBlack = new Color(0, 0, 0, 0.9f);
+		private static readonly Color MoreTransparentBlack = new Color(0, 0, 0, 0.9f);
+		private static readonly Color TransparentBlack = new Color(0, 0, 0, 0.75f);
 
 		private static CanvasGroup _extraParamsCanvasGroup;
 		private static CanvasGroup _baseGameParamsCanvasGroup;
@@ -227,6 +228,7 @@ namespace BetterSongList.HarmonyPatches.UI
 				GameObject panelBg = Object.Instantiate(__instance.transform.Find("BeatmapCharacteristic/BG"), __instance.transform).gameObject;
 				panelBg.name = "LevelParamsBackground";
 				panelBg.transform.SetSiblingIndex(0);
+				panelBg.GetComponent<ImageView>().color = MoreTransparentBlack;
 
 				if (panelBg.TryGetComponent(out RectTransform panelBgRectTransform))
 				{

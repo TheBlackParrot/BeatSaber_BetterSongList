@@ -148,7 +148,7 @@ namespace BetterSongList.HarmonyPatches.UI
 
 			string[] npsParts = (_lastNoteCount / _lastInstance._beatmapLevel.songDuration).ToString("F2").Split(DecimalSeparator);
 
-			_lastInstance._levelParamsPanel._notesPerSecondText.text = $"{npsParts[0]}<size=80%>.{npsParts[1]}<size=65%><alpha=#C0> NPS";
+			_lastInstance._levelParamsPanel._notesPerSecondText.text = $"{npsParts[0]}<size=85%>.{npsParts[1]}<size=65%><alpha=#C0> NPS";
 			_lastInstance._levelParamsPanel._notesCountText.text = $"{_lastNoteCount:N0}";
 			_lastInstance._levelParamsPanel._obstaclesCountText.text = $"{_lastObstacleCount:N0}";
 			_lastInstance._levelParamsPanel._bombsCountText.text = $"{_lastBombCount:N0}";

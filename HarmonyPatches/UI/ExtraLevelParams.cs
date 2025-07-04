@@ -187,6 +187,9 @@ namespace BetterSongList.HarmonyPatches.UI
 		{
 			if(!_extraUI)
 			{
+				__instance.transform.Find("BeatmapDifficulty").transform.localPosition -= new Vector3(0f, 3f, 0f);
+				__instance.transform.Find("BeatmapCharacteristic").transform.localPosition -= new Vector3(0f, 3f, 0f);
+				
 				_baseGameParamsCanvasGroup = __instance._levelParamsPanel.GetComponentInChildren<CanvasGroup>();
 
 				ModifyLevelParamTmpSettings(__instance._levelParamsPanel._notesPerSecondText);
@@ -200,8 +203,8 @@ namespace BetterSongList.HarmonyPatches.UI
 
 				Object.Destroy(_extraUI.GetComponent<LevelParamsPanel>());
 
-				__instance._levelParamsPanel.transform.localPosition += new Vector3(0, 4f);
-				//_extraUI.transform.localPosition += new Vector3(0, 1f);
+				__instance._levelParamsPanel.transform.localPosition += new Vector3(0, 1f);
+				_extraUI.transform.localPosition -= new Vector3(0f, 3f, 0f);
 				
 				for(int i = 1; i < __instance._levelParamsPanel.transform.childCount; i++)
 				{
@@ -221,8 +224,8 @@ namespace BetterSongList.HarmonyPatches.UI
 
 				if (panelBg.TryGetComponent(out RectTransform panelBgRectTransform))
 				{
-					panelBgRectTransform.offsetMin = new Vector2(2f, 29.5f);
-					panelBgRectTransform.offsetMax = new Vector2(-2f, -15.5f);
+					panelBgRectTransform.offsetMin = new Vector2(2f, 26.5f);
+					panelBgRectTransform.offsetMax = new Vector2(-2f, -18.5f);
 				}
 				
 				__instance._levelParamsPanelCanvasGroupTween = new FloatTween(0.0f, 1f, FadeInParams, 0.15f, EaseType.InSine);
